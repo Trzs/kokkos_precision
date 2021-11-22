@@ -1,3 +1,4 @@
+#include <bitset>
 #include <iostream>
 #include <iomanip>
 #include <Kokkos_Core.hpp>
@@ -31,7 +32,9 @@ int main() {
     Kokkos::fence();
 
     auto exp_A = double_t("exp_double");
+    auto h_exp_A = Kokkos::create_mirror_view(exp_A);
     auto exp_B = float_t("exp_float");
+    auto h_exp_B = Kokkos::create_mirror_view(exp_B);
 
     Kokkos::parallel_for("exp", 30, KOKKOS_LAMBDA (const int i)
     {
@@ -40,21 +43,25 @@ int main() {
     });
     Kokkos::fence();
 
-    Kokkos::deep_copy(h_A, exp_A);
-    Kokkos::deep_copy(h_B, exp_B);
+    Kokkos::deep_copy(h_exp_A, exp_A);
+    Kokkos::deep_copy(h_exp_B, exp_B);
     Kokkos::fence();
 
     std::cout << "* * * EXP DOUBLE / FLOAT * * *" << std::endl;
     std::cout << "------------------------------" << std::endl;
     for (int i=0; i<30; ++i)
     {
-      std::cout << std::setprecision(17) << "exp(" << values[i] << ")=" << h_A(i) << std::endl;
-      std::cout << std::setprecision(17) << "exp(" << values[i] << ")=" << h_B(i) << std::endl;
+      std::cout << std::setprecision(17) << "exp(" << values[i] << ")=" << h_exp_A(i) << std::endl;
+      std::cout << std::setprecision(17) << "exp(" << values[i] << ")=" << h_exp_B(i) << std::endl;
+      std::cout << "exp(" << values[i] << ")=" << std::bitset<64>( *reinterpret_cast<std::uint64_t *> (&h_exp_A(i)) ) << std::endl;
+      std::cout << "exp(" << values[i] << ")=" << std::bitset<32>( *reinterpret_cast<std::uint32_t *> (&h_exp_B(i)) ) << std::endl;
     }
 
     auto sin_A = double_t("sin_double");
+    auto h_sin_A = Kokkos::create_mirror_view(sin_A);
     auto sin_B = float_t("sin_float");
- 
+    auto h_sin_B = Kokkos::create_mirror_view(sin_B);
+
     Kokkos::parallel_for("sin", 30, KOKKOS_LAMBDA (const int i)
     {
       sin_A(i) = sin( A(i) );
@@ -62,16 +69,18 @@ int main() {
     });
     Kokkos::fence();
 
-    Kokkos::deep_copy(h_A, sin_A);
-    Kokkos::deep_copy(h_B, sin_B);
+    Kokkos::deep_copy(h_sin_A, sin_A);
+    Kokkos::deep_copy(h_sin_B, sin_B);
     Kokkos::fence();
 
     std::cout << "* * * SIN DOUBLE / FLOAT * * *" << std::endl;
     std::cout << "------------------------------" << std::endl;
     for (int i=0; i<30; ++i)
     {
-      std::cout << std::setprecision(17) << "sin(" << values[i] << ")=" << h_A(i) << std::endl;
-      std::cout << std::setprecision(17) << "sin(" << values[i] << ")=" << h_B(i) << std::endl;
+      std::cout << std::setprecision(17) << "sin(" << values[i] << ")=" << h_sin_A(i) << std::endl;
+      std::cout << std::setprecision(17) << "sin(" << values[i] << ")=" << h_sin_B(i) << std::endl;
+      std::cout << "sin(" << values[i] << ")=" << std::bitset<64>( *reinterpret_cast<std::uint64_t *> (&h_sin_A(i)) ) << std::endl;
+      std::cout << "sin(" << values[i] << ")=" << std::bitset<32>( *reinterpret_cast<std::uint32_t *> (&h_sin_B(i)) ) << std::endl;
     }
 
   }
